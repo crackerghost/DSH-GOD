@@ -12,7 +12,7 @@ const availabilityNames: Record<string, string> = {
   available: 'Detected and available', listed: 'List has been included', unknown: 'Not detected',
   unavailable: 'Not available', throttled: 'Current limiting', 'region-blocked': 'Region restricted',
 }
-const sourceNames: Record<string, string> = { anonymous: 'Anonymous model', kilo: 'Kilo free pool', eac: 'EAC co-payment' }
+const sourceNames: Record<string, string> = { anonymous: 'Anonymous model', kilo: 'Kilo free pool', eac: 'EAC co-payment', 'agent-auto': 'Automatic agent routing' }
 const channelName = (id: string) => sourceNames[id]
   ?? providers.find(provider => provider.id === id)?.name ?? id
 const number = (value: number) => new Intl.NumberFormat('en-US').format(value)
@@ -141,6 +141,7 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
   if (!active) return null
   const filtered = Object.entries(filters).some(([key, value]) => value !== initialFilters[key as keyof typeof initialFilters])
   const routable = summary.catalog.filter(model => model.routable).length
+  const agentAutoModel = summary.catalog.find(model => model.id === 'auto:agent')
   return <div className="model-browser" data-testid="models-ready">
     <header className="dashboard-heading">
       <div><div className="heading-eyebrow">WORKSPACE / MODELS</div><h1>Model list</h1>
@@ -161,6 +162,10 @@ export function Models({ summary, host, active }: { summary: Summary; host: Host
       <span>List update:{summary.catalogSyncedAt ? new Date(summary.catalogSyncedAt).toLocaleString('en-US', { hour12: false }) : 'Not refreshed yet'}</span>
       <span>Active probing and testing generates inference requests</span>
     </div>
+    {agentAutoModel && <aside className="agent-auto-note" data-testid="agent-auto-note">
+      <div><strong>Agent Auto</strong><p>Choose <code>auto:agent</code> in a compatible coding client. It routes each request using tool, vision, reasoning and context needs, then learns from successful tool calls.</p></div>
+      <Button variant="outline" onClick={() => copyModelId(agentAutoModel)}>{copied === agentAutoModel.id ? <Check size={15} /> : <Copy size={15} />}{copied === agentAutoModel.id ? 'Copied model ID' : 'Copy model ID'}</Button>
+    </aside>}
     {error && <div className="channel-error" role="alert"><CircleAlert size={16} /><span>{error}</span>
       <Button variant="ghost" aria-label="Close error message" title="Close error message" onClick={() => setError('')}><X size={15} /></Button></div>}
     {message && <p className="model-feedback" role="status"><Check size={15} />{message}</p>}

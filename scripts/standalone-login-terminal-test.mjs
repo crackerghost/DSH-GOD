@@ -146,7 +146,10 @@ export async function verifyLoginTerminal() {
     await Promise.race([started, pending.then(response => {
       throw new Error(`启动器未执行，请求提前结束：${response.status}`)
     })])
-    assert.equal((await request()).status, 429)
+    const duplicateLaunch = await request()
+    assert.equal(duplicateLaunch.status, 429)
+    assert.equal((await duplicateLaunch.json()).error,
+      'A terminal launch was already requested. Check the window that opened; try again in 30 seconds.')
     assert.equal(attempts, 2)
     finishLaunch()
     const opened = await pending

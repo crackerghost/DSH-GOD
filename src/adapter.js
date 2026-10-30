@@ -33,6 +33,7 @@ import { applyTokenSavers, saverConfig } from './token-saver.js'
 import { classifyFailure, describeVerdict, shouldAdvance } from './route/classify.js'
 import { FALLBACK_IMAGE_PRICING } from './image-pricing.js'
 import { isSubscriptionEntry, subscriptionChunks } from './subscription-adapter.js'
+import { hasToolCallChunk, isAgentAutoEntry, requiresToolCall, selectAgentCandidates } from './combos.js'
 
 export const ROUTE_MAIN = 'our-free-model'
 export const ROUTE_REGION = 'our-free-model-region'
@@ -201,7 +202,7 @@ export class FreeModelAdapter {
   async * runStream(options, pinned, snapshot) {
     const modelId = baseModelId(options.model)
     const entry = pinned ?? snapshot.catalog.find(candidate => candidate.id === modelId) ?? null
-    if (entry !== null && isComboEntry(entry)) {
+    if (entry !== null && (isComboEntry(entry) || isAgentAutoEntry(entry))) {
       yield * this.runCombo(options, entry, snapshot)
       return
     }
@@ -233,16 +234,25 @@ export class FreeModelAdapter {
       yield { type: 'finish', reason: { kind: 'error', failure: { message: 'our free model is switched off in its settings page', code: 'CONFIG_DISABLED' } } }
       return
     }
-    const candidates = comboChain(entry, snapshot.catalog, snapshot.routing ?? {})
+    const agentAuto = isAgentAutoEntry(entry)
+    const candidates = agentAuto
+      ? selectAgentCandidates(entry, snapshot.catalog, {
+        messages: options.messages, tools: options.tools, toolChoice: options.toolChoice,
+        maxTokens: options.maxTokens, reasoningEffort: options.reasoningEffort,
+        settings, routing: snapshot.routing ?? {},
+        membership: [...(snapshot.membership?.[ROUTE_MAIN] ?? []), ...(snapshot.membership?.[ROUTE_REGION] ?? [])],
+      })
+      : comboChain(entry, snapshot.catalog, snapshot.routing ?? {})
+    const routeName = agentAuto ? 'automatic agent route' : `chain "${entry.name}"`
     if (candidates.length === 0) {
       rejectedTurn(0)
-      yield { type: 'finish', reason: { kind: 'error', failure: { message: `the chain "${entry.name}" has no model available on this egress`, code: CODE.server } } }
+      yield { type: 'finish', reason: { kind: 'error', failure: { message: `the ${routeName} has no compatible model available on this egress`, code: CODE.server } } }
       return
     }
     const tried = []
     for (let index = 0; index < candidates.length; index += 1) {
       const candidate = candidates[index]
-      const iterator = this.runSingle(options, candidate, snapshot, {
+      const iterator = this.runSingle(agentAuto ? { ...options, agentAutoRoute: true } : options, candidate, snapshot, {
         wire: wireOf(candidate),
         turnModel: entry.id,
         recordTurn: false,
@@ -256,7 +266,8 @@ export class FreeModelAdapter {
         if (row.done === true) { result = row.value; break }
         if (committed) { yield row.value; continue }
         held.push(row.value)
-        if (commitsAnswer(row.value)) {
+        const mustCallTool = agentAuto && Array.isArray(options.tools) && options.tools.length > 0 && requiresToolCall(options.toolChoice)
+        if (mustCallTool ? hasToolCallChunk(row.value) : commitsAnswer(row.value)) {
           committed = true
           for (const chunk of held) yield chunk
           held.length = 0
@@ -265,6 +276,13 @@ export class FreeModelAdapter {
       if (committed) {
         this.deps.recordTurn?.({ at: started, model: entry.id, ok: result?.ok === true, recovered: result?.recovered === true, attempts: index + 1, origin: 'harness' })
         return
+      }
+      const mustCallTool = agentAuto && Array.isArray(options.tools) && options.tools.length > 0 && requiresToolCall(options.toolChoice)
+      if (mustCallTool && result?.ok === true) {
+        this.deps.recordAgentCapability?.(candidate.id, false)
+        tried.push(`${candidate.id} (did not return the required tool call)`)
+        this.deps.warn?.(`our-free-model: automatic agent route advanced past ${candidate.id} — required tool call was not returned`)
+        continue
       }
       if (result?.advance !== true) {
         // Not a candidate fault — an abort, or a failure that arrived after the
@@ -276,11 +294,11 @@ export class FreeModelAdapter {
       }
       const reason = result.verdict === null || result.verdict === undefined ? 'failed' : describeVerdict(result.verdict)
       tried.push(`${candidate.id} (${reason})`)
-      this.deps.warn?.(`our-free-model: chain "${entry.name}" advanced past ${candidate.id} — ${reason}`)
+      this.deps.warn?.(`our-free-model: ${routeName} advanced past ${candidate.id} — ${reason}`)
     }
     rejectedTurn(candidates.length)
     yield { type: 'finish', reason: { kind: 'error', failure: {
-      message: `the chain "${entry.name}" exhausted every candidate: ${tried.join('; ')}`,
+      message: `the ${routeName} exhausted every candidate: ${tried.join('; ')}`,
       code: CODE.server,
     } } }
   }
@@ -400,6 +418,10 @@ export class FreeModelAdapter {
     const payloadFor = (input, ceiling, sink, savingsSink) => {
       const payload = buildPayload(wire, entry.id, input, options, ceiling, resolveImage, sink)
       if (declared.length > 0) payload.tools = declared
+      if (options.agentAutoRoute === true && declared.length > 0) {
+        const choice = autoToolChoice(options.toolChoice, wire)
+        if (choice !== undefined) payload.tool_choice = choice
+      }
       if (typeof options.temperature === 'number' && Number.isFinite(options.temperature)) payload.temperature = options.temperature
       if (wire !== 'responses' && Array.isArray(options.stop) && options.stop.length > 0) payload.stop = options.stop
       // ⚠️ 续写回合**不再**下发 `tool_choice: 'none'`：v2 门禁见到 `none` 一律
@@ -562,6 +584,9 @@ export class FreeModelAdapter {
         }
         nextIndex = outcome.nextIndex
         outcome = collectUsage(outcome)
+        if (Array.isArray(options.tools) && options.tools.length > 0 && outcome.sawToolCall === true) {
+          this.deps.recordAgentCapability?.(entry.id, true)
+        }
         usageAdded = true
         if (options.signal?.aborted === true) {
           record(false, outcome, { aborted: true })
@@ -920,6 +945,10 @@ function savingsFields(report) {
  */
 function describe(entry, settings) {
   const parts = [entry.vision ? 'vision + text input' : 'text input', `${Math.round(entry.contextWindow / 1024)}K context`]
+  if (isAgentAutoEntry(entry)) {
+    parts.push('automatically selects by tools, vision, context and observed capability')
+    return parts.join(' · ')
+  }
   // A chain's own detail line: which models it will try, in order. Without it a
   // combo in the picker looks like one more model with no endpoint behind it.
   if (isComboEntry(entry)) {
@@ -941,4 +970,17 @@ function describe(entry, settings) {
     }
   }
   return parts.join(' · ')
+}
+
+function autoToolChoice(choice, wire) {
+  if (!requiresToolCall(choice)) return undefined
+  const name = choice && typeof choice === 'object'
+    ? choice.name ?? choice.function?.name
+    : undefined
+  if (typeof name === 'string' && name !== '') {
+    if (wire === 'messages') return { type: 'tool', name }
+    if (wire === 'responses') return { type: 'function', name }
+    return { type: 'function', function: { name } }
+  }
+  return wire === 'messages' ? { type: 'any' } : 'required'
 }

@@ -69,6 +69,10 @@ assert.ok(!html.includes('settings-'), '设置页面不应在登录首屏预加�
 assert.ok(!html.includes('app.tsx'), '只提供编译后的资源')
 assert.ok(!fs.existsSync(new URL('channels.js', web)), '不同时携带第二份 React 渠道包')
 const app = fs.readFileSync(new URL('app.js', web), 'utf8')
+assert.ok(assets.filter(name => name.endsWith('.js')).some(name => {
+  const bundle = fs.readFileSync(new URL(name, web), 'utf8')
+  return bundle.includes('agent-auto-note') && bundle.includes('auto:agent')
+}), 'model catalog explains Agent Auto and offers its model ID')
 const channel = assets.find(name => name.startsWith('channels-'))
 assert.ok(channel, '渠道必须是独立分包')
 assert.ok(app.includes(channel) && app.includes('import('), '入口必须动态导入渠道')

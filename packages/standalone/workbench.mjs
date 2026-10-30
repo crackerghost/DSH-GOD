@@ -256,7 +256,7 @@ export function createWorkbench({ dataDir, info, modelRows, key, home = os.homed
     if (!client.installed) throw error('尚未找到客户端，请先安装或设置可执行文件路径', 409)
     if (!directory(client.cwd)) throw error('工作目录不存在', 409)
     if (client.mode === 'gateway') {
-      if (info().enabled === false) throw error('本地推理服务已暂停', 409)
+      if (info().enabled === false) throw error('Local inference is paused.', 409)
       if (!modelRows().some(row => row.id === client.model)) throw error('所选模型当前不可用，请重新选择', 409)
     }
     launching.add(id)

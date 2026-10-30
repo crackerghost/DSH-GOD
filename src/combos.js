@@ -250,3 +250,132 @@ export function pruneRotation(combos) {
 export function resetRotation() {
   rotation.clear()
 }
+
+// Capability-aware virtual model published alongside user-defined combos.
+export const AGENT_AUTO_MODEL_ID = 'auto:agent'
+const DEFAULT_CONTEXT = 131072
+const DEFAULT_OUTPUT = 8192
+const OBSERVATION_MAX_AGE = 180 * 24 * 60 * 60 * 1000
+
+export function isAgentAutoEntry(entry) {
+  return entry?.id === AGENT_AUTO_MODEL_ID && entry?.agentAuto === true
+}
+
+export function buildAgentAutoEntry(catalog) {
+  const members = catalog.filter(row => row && typeof row.id === 'string'
+    && !isComboEntry(row) && !isAgentAutoEntry(row))
+  if (members.length === 0) return null
+  return {
+    id: AGENT_AUTO_MODEL_ID,
+    name: 'Agent Auto',
+    channel: 'agent-auto',
+    agentAuto: true,
+    combo: members.map(row => row.id),
+    vision: members.some(row => row.vision === true),
+    reasoning: members.some(row => row.reasoning === true),
+    contextWindow: Math.max(...members.map(row => positive(row.contextWindow) ?? DEFAULT_CONTEXT)),
+    maxOutput: Math.max(...members.map(row => positive(row.maxOutput) ?? DEFAULT_OUTPUT)),
+    canDisableThinking: members.some(row => row.canDisableThinking !== false),
+    wire: 'chat',
+    lanes: [...new Set(members.flatMap(row => row.lanes ?? [row.channel ?? 'free']))],
+  }
+}
+
+export function selectAgentCandidates(entry, catalog, {
+  messages = [], tools = [], toolChoice, maxTokens, reasoningEffort,
+  settings = {}, routing = {}, membership, now = Date.now(),
+} = {}) {
+  if (!isAgentAutoEntry(entry) || !Array.isArray(entry.combo)) return []
+  const byId = new Map(catalog.map(row => [row.id, row]))
+  const request = inspectAgentRequest({ messages, tools, settings, maxTokens, reasoningEffort, toolChoice })
+  const allowed = membership instanceof Set ? membership
+    : Array.isArray(membership) ? new Set(membership) : null
+  let candidates = entry.combo.map(id => byId.get(id)).filter(row => row && !isComboEntry(row)
+    && !isAgentAutoEntry(row) && (!allowed || allowed.has(row.id)))
+  if (request.needsVision) candidates = candidates.filter(row => row.vision === true)
+  if (request.needsReasoning) candidates = candidates.filter(row => row.reasoning === true)
+
+  const capabilityMap = routing.agentCapabilities ?? {}
+  const support = row => {
+    const observed = capabilityMap[row.id]
+    const checked = Date.parse(observed?.checkedAt)
+    if (observed && typeof observed.toolCalling === 'boolean'
+      && Number.isFinite(checked) && now - checked <= OBSERVATION_MAX_AGE) return observed.toolCalling
+    return row.toolCalling === true ? true : row.toolCalling === false ? false : null
+  }
+  if (request.needsTools) {
+    const compatible = candidates.filter(row => support(row) !== false)
+    if (compatible.length > 0) candidates = compatible
+  }
+  const contextOf = row => positive(row.contextWindow) ?? DEFAULT_CONTEXT
+  const fitting = candidates.filter(row => request.requiredContext <= contextOf(row))
+  if (fitting.length > 0) candidates = fitting
+  else if (candidates.length > 0) {
+    const largest = Math.max(...candidates.map(contextOf))
+    candidates = candidates.filter(row => contextOf(row) === largest)
+  }
+  if (candidates.length < 2) return candidates
+
+  const usageOrder = comboChain({ id: `${AGENT_AUTO_MODEL_ID}:rank`, combo: candidates.map(row => row.id), strategy: 'smart' }, catalog, routing)
+  const order = new Map(usageOrder.map((row, index) => [row.id, index]))
+  return candidates.map((row, index) => ({ row, index, tool: request.needsTools ? support(row) : null }))
+    .sort((a, b) => {
+      if (request.needsTools && a.tool !== b.tool) {
+        const rank = value => value === true ? 0 : value === null ? 1 : 2
+        const delta = rank(a.tool) - rank(b.tool)
+        if (delta !== 0) return delta
+      }
+      return (order.get(a.row.id) ?? a.index) - (order.get(b.row.id) ?? b.index)
+    }).map(item => item.row)
+}
+
+export function requiresToolCall(toolChoice) {
+  if (toolChoice === 'required' || toolChoice === 'any') return true
+  if (!toolChoice || typeof toolChoice !== 'object' || Array.isArray(toolChoice)) return false
+  return toolChoice.type === 'any' || toolChoice.type === 'required'
+    || toolChoice.type === 'tool' || toolChoice.type === 'function'
+}
+
+export function hasToolCallChunk(chunk) {
+  if (chunk?.type !== 'block-end' || chunk.block?.type !== 'tool-call'
+    || typeof chunk.block.name !== 'string' || chunk.block.name === '') return false
+  try {
+    JSON.parse(chunk.block.arguments === '' ? '{}' : chunk.block.arguments)
+    return true
+  } catch {
+    return false
+  }
+}
+
+function inspectAgentRequest({ messages, tools, settings, maxTokens, reasoningEffort, toolChoice }) {
+  const nodes = { seen: 0, imageCount: 0, chars: 0 }
+  const walk = (value, depth = 0) => {
+    if (depth > 16 || nodes.seen++ > 100000 || value == null) return
+    if (typeof value === 'string') { nodes.chars += Math.min(value.length, 4_000_000 - nodes.chars); return }
+    if (Array.isArray(value)) { for (const item of value) walk(item, depth + 1); return }
+    if (typeof value !== 'object') return
+    if (value.type === 'image' || value.type === 'input_image' || value.type === 'image_url'
+      || Object.hasOwn(value, 'image_url')) nodes.imageCount++
+    for (const [key, item] of Object.entries(value)) {
+      if (['url', 'data', 'bytes', 'base64', 'attachment', 'image_url'].includes(key)) continue
+      walk(item, depth + 1)
+    }
+  }
+  walk(messages)
+  walk(tools)
+  if (typeof settings?.system === 'string') walk(settings.system)
+  const estimatedInput = Math.ceil(nodes.chars / 3) + nodes.imageCount * 8192
+  const outputBudget = positive(maxTokens) ?? positive(settings?.defaultMaxTokens) ?? DEFAULT_OUTPUT
+  const effort = typeof reasoningEffort === 'string' ? reasoningEffort.toLowerCase() : ''
+  return {
+    needsVision: nodes.imageCount > 0,
+    needsTools: Array.isArray(tools) && tools.length > 0,
+    requiredToolCall: requiresToolCall(toolChoice),
+    needsReasoning: effort !== '' && !['off', 'none', 'disabled'].includes(effort),
+    requiredContext: estimatedInput + Math.min(outputBudget, 32768),
+  }
+}
+
+function positive(value) {
+  return typeof value === 'number' && Number.isFinite(value) && value > 0 ? Math.trunc(value) : undefined
+}

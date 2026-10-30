@@ -67,6 +67,7 @@ const suites = [
   ['workbench-management', 'workbench-management-test.mjs', []],
   ['client-terminal', 'client-terminal-test.mjs', []],
   ['quota-routing', 'quota-routing-test.mjs', []],
+  ['agent-routing', 'agent-routing-test.mjs', []],
   ['turn-accounting', 'turn-accounting-test.mjs', []],
   ['chan-relay', 'chan-relay-test.mjs', []],
   ['channel-pack', 'channel-pack-test.mjs', []],

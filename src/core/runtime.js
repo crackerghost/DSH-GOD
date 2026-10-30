@@ -14,6 +14,7 @@ import { fetchKiloListing } from '../kilo.js'
 import { sessionForConversation } from '../upstream.js'
 import { createForwardCompletion, publicModelRows } from './completion.js'
 import { isSubscriptionEntry, subscriptionCatalog } from '../subscription-adapter.js'
+import { buildAgentAutoEntry, isAgentAutoEntry } from '../combos.js'
 
 const FALLBACK_CATALOG = buildCatalog([
   'mimo-v2.6-flash-free', 'mimo-v2.5-free', 'ling-3.0-flash-fin-free',
@@ -113,6 +114,8 @@ export function createModelRuntime({
       seen.add(entry.id)
       merged.push(entry)
     }
+    const agentAuto = buildAgentAutoEntry(merged)
+    if (agentAuto !== null && !seen.has(agentAuto.id)) merged.push(agentAuto)
     catalog = merged
   }
   const mergeCatalogs = () => {
@@ -129,6 +132,7 @@ export function createModelRuntime({
     routing: {
       quota: subscriptionRuntime?.routingQuota?.() ?? {},
       usage: Object.fromEntries(catalog.map(row => [row.id, stats.get().models?.[row.id]?.calls ?? 0])),
+      agentCapabilities: stats.get().agentCapabilities ?? {},
     },
   })
   const emitTopology = () => { if (!disposed) onTopology() }
@@ -143,6 +147,19 @@ export function createModelRuntime({
       stats.edit(value => pruneDays(value, 120))
     },
     recordTurn: record => { if (!disposed) recordTurn(stats, record) },
+    recordAgentCapability: (model, toolCalling) => {
+      if (disposed || typeof model !== 'string' || typeof toolCalling !== 'boolean') return
+      stats.edit(value => {
+        const capabilities = { ...(value.agentCapabilities ?? {}) }
+        capabilities[model] = { toolCalling, checkedAt: new Date().toISOString() }
+        const entries = Object.entries(capabilities)
+        if (entries.length > 500) {
+          entries.sort((a, b) => Date.parse(a[1]?.checkedAt ?? '') - Date.parse(b[1]?.checkedAt ?? ''))
+          for (const [id] of entries.slice(0, entries.length - 500)) delete capabilities[id]
+        }
+        return { ...value, agentCapabilities: capabilities }
+      })
+    },
     warn: message => logger.warn?.(message) ?? logger.log?.(message),
     // Automatic probing is disabled by owner policy: a region refusal from a
     // real turn stays a turn failure and never fires a background probe.
@@ -435,7 +452,12 @@ export function computeMembership(catalog, availabilitySnapshot, settings) {
   if (refusedAll) usable = catalog
   const main = []
   const region = []
-  for (const entry of usable) {
+  for (const entry of catalog) {
+    if (isAgentAutoEntry(entry)) {
+      if (!isModelHidden(entry, settings)) main.push(entry.id)
+      continue
+    }
+    if (!usable.includes(entry)) continue
     if (isModelHidden(entry, settings)) continue
     const verdict = verdictOf(entry)
     if (verdict !== STATE.regionBlocked) main.push(entry.id)

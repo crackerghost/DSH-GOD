@@ -93,6 +93,16 @@
 }
 .model-summary > span:nth-child(2) { font-variant-numeric: tabular-nums; }
 .model-summary > span:last-child { margin-left: auto; color: var(--md-ink-muted); }
+.agent-auto-note {
+  display: flex; align-items: center; justify-content: space-between; gap: 16px;
+  padding: 14px 16px; margin: -6px 0 20px; border: 1px solid var(--md-accent-border);
+  border-radius: 12px; background: var(--md-accent-tint); color: var(--md-ink-secondary);
+}
+.agent-auto-note strong { color: var(--md-ink); font-size: 13px; }
+.agent-auto-note p { margin: 4px 0 0; font-size: 12px; line-height: 1.55; }
+.agent-auto-note code { color: var(--md-ink); font-size: 11px; }
+.agent-auto-note .ui-button { flex: 0 0 auto; }
+@media (max-width: 640px) { .agent-auto-note { align-items: flex-start; flex-direction: column; } }
 
 /* ---- 筛选工具栏 ---- */
 .model-filters {

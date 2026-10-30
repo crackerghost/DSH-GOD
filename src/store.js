@@ -304,6 +304,7 @@ export const STATS_INITIAL = {
   failedRequests: 0,
   samples: [],
   logical: { turns: 0, failed: 0, recovered: 0, models: {} },
+  agentCapabilities: {},
   /** Lifetime token-saver totals; `calls` counts every request the pipeline ran
    *  on, including the ones where nothing was compressible. */
   savings: { bytesBefore: 0, bytesAfter: 0, saved: 0, blocks: 0, calls: 0, promptCalls: 0 },
