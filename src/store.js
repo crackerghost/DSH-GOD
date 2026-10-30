@@ -205,12 +205,12 @@ export const SETTINGS_INITIAL = {
   },
   /** Named fallback chains. A combo is a virtual model whose answer comes from
    *  the first link that produces output; see src/combos.js.
-   *  Ships one sensible default so a fresh install shows a single "推荐免费组"
+   *  Ships one sensible default so a fresh install shows a single "Recommended free group"
    *  entry instead of a dozen free models; users can edit/disable it in settings. */
   combos: [
     {
       id: 'combo:recommended-free',
-      name: '推荐免费组',
+      name: 'Recommended free group',
       models: ['deepseek-v4.1-flash-free', 'glm-5.3-flash-free', 'space-bunny-free'],
       strategy: 'fallback',
       stickyLimit: 1,

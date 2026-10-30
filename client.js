@@ -4410,16 +4410,16 @@ window.__ModuleLoader__.load({
      * and logo tile; `login` picks the flow the card offers.
      */
     const CHANNEL_PROVIDERS = [
-      { id: 'lobsterai', name: 'LobsterAI', org: '有道', accent: '#FF6A00', note: '龙虾 · 每日签到积分', login: 'browser' },
-      { id: 'qoder', name: 'Qoder', org: '阿里系', accent: '#615CED', note: '每日 100 Credits，加密推理端点', login: 'browser' },
-      { id: 'qodercn', name: 'Qoder 中国版', org: '阿里系', accent: '#7A6CF0', note: '中国版端点与模型池', login: 'browser' },
-      { id: 'trae', name: 'TRAE', org: '字节', accent: '#00BFA6', note: '手机号登录', login: 'browser' },
-      { id: 'cline', name: 'Cline', org: 'Cline', accent: '#5B5BD6', note: 'Cline 账号免费额度', login: 'browser' },
-      { id: 'loomy', name: 'Loomy', org: '讯飞', accent: '#2F6BFF', note: '微信扫码，或短信验证码备用', login: 'browser+sms' },
-      { id: 'raccoon', name: 'Raccoon', org: '商汤', accent: '#00A6A6', note: '手机号登录', login: 'browser' },
-      { id: 'minimax', name: 'MiniMax Code', org: 'MiniMax', accent: '#E4007F', note: '设备码 + PKCE，每日签到', login: 'browser' },
-      { id: 'zcode', name: 'ZCode', org: '智谱', accent: '#3B6EF6', note: '浏览器登录（需本机可开浏览器）', login: 'browser' },
-      { id: 'gemini', name: 'Gemini', org: 'Google Code Assist', accent: '#4285F4', note: '本地回调 OAuth 免费线', login: 'browser' },
+      { id: 'lobsterai', name: 'LobsterAI', org: 'Youdao', accent: '#FF6A00', note: 'Lobster · daily check-in credits', login: 'browser' },
+      { id: 'qoder', name: 'Qoder', org: 'Alibaba', accent: '#615CED', note: '100 credits per day · encrypted inference endpoint', login: 'browser' },
+      { id: 'qodercn', name: 'Qoder China', org: 'Alibaba', accent: '#7A6CF0', note: 'China endpoint and model pool', login: 'browser' },
+      { id: 'trae', name: 'TRAE', org: 'ByteDance', accent: '#00BFA6', note: 'Phone number sign-in', login: 'browser' },
+      { id: 'cline', name: 'Cline', org: 'Cline', accent: '#5B5BD6', note: 'Free quota for Cline accounts', login: 'browser' },
+      { id: 'loomy', name: 'Loomy', org: 'iFlytek', accent: '#2F6BFF', note: 'Sign in with WeChat QR code or SMS verification', login: 'browser+sms' },
+      { id: 'raccoon', name: 'Raccoon', org: 'SenseTime', accent: '#00A6A6', note: 'Phone number sign-in', login: 'browser' },
+      { id: 'minimax', name: 'MiniMax Code', org: 'MiniMax', accent: '#E4007F', note: 'Device code + PKCE · daily check-in', login: 'browser' },
+      { id: 'zcode', name: 'ZCode', org: 'Zhipu AI', accent: '#3B6EF6', note: 'Browser sign-in (a browser must be available on this device)', login: 'browser' },
+      { id: 'gemini', name: 'Gemini', org: 'Google Code Assist', accent: '#4285F4', note: 'Free OAuth access with a local callback', login: 'browser' },
     ]
 
     /** 与现有 RPC 的能力对应：余额、每日领取及独立签到状态分别判断。 */

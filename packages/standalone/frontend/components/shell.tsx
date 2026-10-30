@@ -7,23 +7,23 @@ import type { Host, Page, Summary } from '../types'
 import { hasDesktopBridge } from '../desktop-update'
 
 const navigation = [
-  { label: '工作空间', items: [
-    { id: 'overview', name: '概览', icon: LayoutDashboard },
-    { id: 'workspace', name: '模型工作台', icon: PanelsTopLeft },
-    { id: 'agents', name: '客户端与订阅', icon: Monitor },
-    { id: 'models', name: '模型清单', icon: Boxes },
-    { id: 'usage', name: '用量统计', icon: Activity },
-    { id: 'library', name: '资源库', icon: LibraryBig },
+  { label: 'Workspace', items: [
+    { id: 'overview', name: 'Overview', icon: LayoutDashboard },
+    { id: 'workspace', name: 'Model workbench', icon: PanelsTopLeft },
+    { id: 'agents', name: 'Clients and subscriptions', icon: Monitor },
+    { id: 'models', name: 'Model catalog', icon: Boxes },
+    { id: 'usage', name: 'Usage', icon: Activity },
+    { id: 'library', name: 'Resource library', icon: LibraryBig },
   ] },
-  { label: '渠道与连接', items: [
-    { id: 'providers', name: '聚合渠道', icon: PanelsTopLeft },
-    { id: 'routing', name: '路由组', icon: Route },
+  { label: 'Channels and connections', items: [
+    { id: 'providers', name: 'Provider connections', icon: PanelsTopLeft },
+    { id: 'routing', name: 'Routing groups', icon: Route },
     { id: 'channels', name: 'EAC router', icon: Network },
-    { id: 'eac', name: 'EAC 协付渠道', icon: Handshake },
-    { id: 'connection', name: 'API 接入', icon: Cable },
+    { id: 'eac', name: 'EAC shared channel', icon: Handshake },
+    { id: 'connection', name: 'API access', icon: Cable },
   ] },
-  { label: '管理', items: [{ id: 'settings', name: '服务设置', icon: Settings2 }, { id: 'updates', name: '应用更新', icon: RotateCw }] },
-  { label: '项目支持', items: [{ id: 'sponsor', name: '来自赞助商的广告', icon: Coffee }] },
+  { label: 'Management', items: [{ id: 'settings', name: 'Service settings', icon: Settings2 }, { id: 'updates', name: 'App updates', icon: RotateCw }] },
+  { label: 'Project support', items: [{ id: 'sponsor', name: 'Sponsor', icon: Coffee }] },
 ] as const
 
 /**
@@ -74,8 +74,8 @@ function useTheme() {
 
 export function ThemeToggle() {
   const { theme, toggle } = useTheme()
-  const label = theme === 'dark' ? '切换到浅色主题' : '切换到深色主题'
-  return <Button variant="ghost" className="theme-toggle" aria-label={label} title={theme === 'dark' ? '浅色' : '深色'}
+  const label = theme === 'dark' ? 'Switch to light theme' : 'Switch to dark theme'
+  return <Button variant="ghost" className="theme-toggle" aria-label={label} title={theme === 'dark' ? 'light color' : 'Dark'}
     onClick={event => { const rect = event.currentTarget.getBoundingClientRect(); toggle({ x: rect.left + rect.width / 2, y: rect.top + rect.height / 2 }) }}>
     <span className="theme-toggle-track" data-theme={theme}>
       <span className="theme-toggle-icon theme-toggle-sun" aria-hidden="true"><Sun size={16} /></span>
@@ -85,21 +85,21 @@ export function ThemeToggle() {
 }
 
 export const pageNames: Record<Page, string> = {
-  overview: '概览', workspace: '模型工作台', models: '模型清单', usage: '用量统计', channels: 'EAC router',
-  agents: '客户端与订阅', providers: '聚合渠道', library: '资源库', routing: '路由组',
-  eac: 'EAC 协付渠道', settings: '服务设置', updates: '应用更新', connection: 'API 接入', sponsor: '来自赞助商的广告',
+  overview: 'Overview', workspace: 'Model workspace', models: 'Model catalog', usage: 'Usage', channels: 'EAC router',
+  agents: 'Clients and subscriptions', providers: 'Provider connections', library: 'Resource library', routing: 'Routing groups',
+  eac: 'EAC shared channel', settings: 'Service settings', updates: 'App updates', connection: 'API access', sponsor: 'Sponsor',
 }
 
 export function Sidebar({ page, summary, host, onDisclaimer }: { page: Page; summary?: Summary; host: Host; onDisclaimer(): void }) {
   return <>
-    <a className="console-brand" href="/" aria-label="Our Free Model 首页">
+    <a className="console-brand" href="/" aria-label="Our Free Model Home Page">
       <img className="console-mark" src={brandMark} alt="" width={34} height={36} />
-      <span>Our Free Model<small>本地模型工作台</small></span>
+      <span>Our Free Model<small>Local AI workspace</small></span>
     </a>
     <div className="workspace-switch"><span className="workspace-avatar"><ShieldCheck size={17} /></span>
-      <span>个人工作空间<small>独立本地服务</small></span><Badge>本机</Badge>
+      <span>Personal workspace<small>Standalone service</small></span><Badge>Local</Badge>
     </div>
-    <nav className="console-nav" aria-label="管理导航">{navigation.map(group => <div className="nav-group" key={group.label}>
+    <nav className="console-nav" aria-label="Admin navigation">{navigation.map(group => <div className="nav-group" key={group.label}>
       <span className="nav-group-label">{group.label}</span>
       {group.items.filter(item => item.id !== 'updates' || hasDesktopBridge()).map(item => <button key={item.id} id={item.id === 'sponsor' ? 'ofm-sponsor-menu-desktop' : undefined} className={`console-nav-item ${item.id === 'sponsor' ? 'ofm-sponsor-nav' : ''} ${page === item.id ? 'selected' : ''}`}
         aria-current={page === item.id ? 'page' : undefined} onClick={() => host.navigate(item.id)}>
@@ -108,13 +108,13 @@ export function Sidebar({ page, summary, host, onDisclaimer }: { page: Page; sum
         {item.id === 'models' && <span className="count-badge">{summary?.catalog.length ?? '—'}</span>}
       </button>)}
     </div>)}</nav>
-    <div className="sidebar-support"><ShieldCheck size={17} /><div><strong>独立本地存储</strong><p>本机运行 / 仅监听回环地址</p></div></div>
-    <div className="console-sidebar-footer"><div><span className="status-dot" />本地服务在线<small>v{summary?.version ?? '—'}</small></div>
-      <ThemeToggle /><Button variant="ghost" aria-label="退出管理" title="退出管理" onClick={() => { void host.logout().catch(host.error) }}><LogOut size={16} /></Button></div>
-    <button type="button" className="sidebar-disclaimer" onClick={onDisclaimer}>使用须知与免责声明</button>
+    <div className="sidebar-support"><ShieldCheck size={17} /><div><strong>Local storage</strong><p>Runs on this computer · Local connections only</p></div></div>
+    <div className="console-sidebar-footer"><div><span className="status-dot" />Service online<small>v{summary?.version ?? '—'}</small></div>
+      <ThemeToggle /><Button variant="ghost" aria-label="Exit management" title="Exit management" onClick={() => { void host.logout().catch(host.error) }}><LogOut size={16} /></Button></div>
+    <button type="button" className="sidebar-disclaimer" onClick={onDisclaimer}>Instructions for use and disclaimer</button>
   </>
 }
 export function Topbar({ page, summary }: { page: Page; summary?: Summary }) {
-  return <><div className="console-breadcrumb"><span>工作空间</span><ChevronRight size={14} /><strong key={page} className="console-breadcrumb-current">{pageNames[page]}</strong></div>
-    <div className="console-topbar-status"><span className="status-dot" /><span>{summary?.settings.enabled === false ? '推理已暂停' : '本地服务'}</span><span className="topbar-divider" /><span>LOCAL</span></div></>
+  return <><div className="console-breadcrumb"><span>Workspace</span><ChevronRight size={14} /><strong key={page} className="console-breadcrumb-current">{pageNames[page]}</strong></div>
+    <div className="console-topbar-status"><span className="status-dot" /><span>{summary?.settings.enabled === false ? 'Inference paused' : 'Local service'}</span><span className="topbar-divider" /><span>LOCAL</span></div></>
 }

@@ -40,7 +40,7 @@ export function DesktopUpdate() {
         setStatus(value)
         setLoadError('')
         timer = setTimeout(() => { void poll() }, 1000)
-      } catch (reason) { if (live.current) { setLoadError(reason instanceof Error ? reason.message : '无法读取更新状态'); timer = setTimeout(() => { void poll() }, 5000) } }
+      } catch (reason) { if (live.current) { setLoadError(reason instanceof Error ? reason.message : 'Unable to read update status'); timer = setTimeout(() => { void poll() }, 5000) } }
     }
     void poll()
     return () => { live.current = false; clearTimeout(timer) }
@@ -49,7 +49,7 @@ export function DesktopUpdate() {
     if (busyRef.current) return
     busyRef.current = true; setRequesting(true); setError('')
     try { const value = await management<UpdateStatus>(`/desktop-update/${name}`, {}); if (live.current) setStatus(value) }
-    catch (reason) { if (live.current) setError(reason instanceof Error ? reason.message : '更新请求失败，请重试') }
+    catch (reason) { if (live.current) setError(reason instanceof Error ? reason.message : 'Update request failed, please try again') }
     finally { busyRef.current = false; if (live.current) setRequesting(false) }
   }
   const install = async () => {
@@ -62,24 +62,24 @@ export function DesktopUpdate() {
   const percentage = status?.total ? Math.min(100, Math.round(status.received / status.total * 100)) : 0
   return <div className="settings-browser desktop-update-browser" data-testid="desktop-update-ready">
     <header className="dashboard-heading"><div><div className="heading-eyebrow">MANAGEMENT / UPDATES</div>
-      <h1>应用更新</h1><p>保持桌面客户端为最新版本，配置与账号保留。</p></div>
-      <Badge tone={status?.phase === 'ready' ? 'success' : 'neutral'}>{status?.phase === 'ready' ? '已校验，待安装' : '桌面客户端'}</Badge></header>
-    <Card className="settings-card"><div className="settings-card-heading"><RefreshCw size={16} /><div><h2>版本与更新</h2><p>检查本项目正式发布的桌面安装包。</p></div></div>
-      <div className="desktop-update-versions"><div><small>当前版本</small><strong>{status?.currentVersion ? `v${status.currentVersion}` : '—'}</strong></div>
-        <div><small>最新桌面版本</small><strong>{status?.latest ? `v${status.latest.version}` : '尚未检查'}</strong></div>
-        <div><small>上次检查</small><span>{status?.checkedAt ? new Date(status.checkedAt).toLocaleString() : '从未检查'}</span></div></div>
-      {!native ? <p className="settings-note"><CircleAlert size={15} />请在桌面客户端中打开此栏目，浏览器访问不支持安装应用更新。</p>
-        : status && !status.supported ? <p className="settings-note"><CircleAlert size={15} />当前提供 Windows x64 桌面端内置更新，其他平台请使用对应安装包。</p>
-          : <div className="desktop-update-actions"><Button variant="outline" busy={requesting || status?.phase === 'checking'} disabled={!!busy || !status} onClick={() => { void action('check') }}><RefreshCw size={15} />检查更新</Button>
-            {status?.available && status.phase !== 'ready' && <Button busy={status.phase === 'downloading'} disabled={!!busy} onClick={() => { void action('download') }}><ArrowDownToLine size={15} />下载更新{status.latest ? ` · ${bytes(status.latest.size)}` : ''}</Button>}
-            {status?.phase === 'ready' && <Button busy={installing} disabled={!!busy} onClick={() => { void install() }}><RotateCw size={15} />退出并安装</Button>}</div>}
-      {status?.checkedAt && status.phase === 'idle' && !status.available && <p className="settings-note" role="status"><Check size={15} />{status.latest ? '当前已是最新桌面版本' : '暂未找到适配此设备的正式桌面安装包'}</p>}
-      {status?.phase === 'downloading' && <div className="desktop-update-progress" role="status"><div><span>正在下载更新</span><span>{percentage}% · {bytes(status.received)} / {bytes(status.total)}</span></div><progress aria-label="更新下载进度" max={100} value={percentage} /></div>}
-      {status?.phase === 'ready' && <p className="settings-note" role="status"><ShieldCheck size={15} />安装包校验通过。点击安装后会退出客户端，完成覆盖安装后自动重新打开。</p>}
-      {installing && <p className="settings-note" role="status"><RotateCw size={15} />正在准备安装，请等待客户端退出并重新打开。</p>}
+      <h1>Apply updates</h1><p>Keep the desktop client up to date, configurations and accounts preserved.</p></div>
+      <Badge tone={status?.phase === 'ready' ? 'success' : 'neutral'}>{status?.phase === 'ready' ? 'Verified, waiting to be installed' : 'desktop client'}</Badge></header>
+    <Card className="settings-card"><div className="settings-card-heading"><RefreshCw size={16} /><div><h2>Versions and updates</h2><p>Check out the officially released desktop installation package for this project.</p></div></div>
+      <div className="desktop-update-versions"><div><small>Current version</small><strong>{status?.currentVersion ? `v${status.currentVersion}` : '—'}</strong></div>
+        <div><small>Latest desktop version</small><strong>{status?.latest ? `v${status.latest.version}` : 'Not checked yet'}</strong></div>
+        <div><small>last checked</small><span>{status?.checkedAt ? new Date(status.checkedAt).toLocaleString() : 'never checked'}</span></div></div>
+      {!native ? <p className="settings-note"><CircleAlert size={15} />Please open this column in the desktop client. Browser access does not support the installation of application updates.</p>
+        : status && !status.supported ? <p className="settings-note"><CircleAlert size={15} />Currently, built-in updates are provided for Windows x64 desktop. For other platforms, please use the corresponding installation package.</p>
+          : <div className="desktop-update-actions"><Button variant="outline" busy={requesting || status?.phase === 'checking'} disabled={!!busy || !status} onClick={() => { void action('check') }}><RefreshCw size={15} />Check for updates</Button>
+            {status?.available && status.phase !== 'ready' && <Button busy={status.phase === 'downloading'} disabled={!!busy} onClick={() => { void action('download') }}><ArrowDownToLine size={15} />Download updates{status.latest ? ` · ${bytes(status.latest.size)}` : ''}</Button>}
+            {status?.phase === 'ready' && <Button busy={installing} disabled={!!busy} onClick={() => { void install() }}><RotateCw size={15} />Exit and install</Button>}</div>}
+      {status?.checkedAt && status.phase === 'idle' && !status.available && <p className="settings-note" role="status"><Check size={15} />{status.latest ? 'Currently the latest desktop version' : 'No official desktop installation package suitable for this device has been found yet.'}</p>}
+      {status?.phase === 'downloading' && <div className="desktop-update-progress" role="status"><div><span>Downloading updates</span><span>{percentage}% · {bytes(status.received)} / {bytes(status.total)}</span></div><progress aria-label="Update download progress" max={100} value={percentage} /></div>}
+      {status?.phase === 'ready' && <p className="settings-note" role="status"><ShieldCheck size={15} />The installation package verification passed. After clicking the installation button, the client will exit and will reopen automatically after the overlay installation is completed.</p>}
+      {installing && <p className="settings-note" role="status"><RotateCw size={15} />Preparing for installation, please wait for the client to exit and reopen.</p>}
       {(error || loadError || status?.error) && <p className="settings-save-error" role="alert"><CircleAlert size={15} /><span>{error || loadError || status?.error}</span></p>}
     </Card>
-    {status?.latest && <Card className="settings-card"><div className="settings-card-heading"><ArrowDownToLine size={16} /><div><h2>更新说明 · v{status.latest.version}</h2><p>{status.latest.publishedAt ? new Date(status.latest.publishedAt).toLocaleDateString() : '正式发布'}</p></div></div>
-      <div className="desktop-update-notes">{status.latest.notes || '此版本未附更新说明。'}</div></Card>}
+    {status?.latest && <Card className="settings-card"><div className="settings-card-heading"><ArrowDownToLine size={16} /><div><h2>Update instructions · v{status.latest.version}</h2><p>{status.latest.publishedAt ? new Date(status.latest.publishedAt).toLocaleDateString() : 'Officially released'}</p></div></div>
+      <div className="desktop-update-notes">{status.latest.notes || 'This version does not come with update instructions.'}</div></Card>}
   </div>
 }

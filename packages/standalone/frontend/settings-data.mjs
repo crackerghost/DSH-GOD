@@ -33,13 +33,13 @@ export function validateSettingsDraft(draft) {
   /** @type {Partial<Record<'defaultMaxTokens' | 'probeIntervalMinutes', string>>} */
   const errors = {}
   for (const [key, label, min, max] of [
-    ['defaultMaxTokens', '最大输出 Token', 512, 131072],
-    ['probeIntervalMinutes', '刷新间隔', 1, 1440],
+    ['defaultMaxTokens', 'Maximum output Token', 512, 131072],
+    ['probeIntervalMinutes', 'refresh interval', 1, 1440],
   ]) {
     const raw = draft[key].trim()
     const value = Number(raw)
     if (!raw || !Number.isInteger(value) || value < min || value > max) {
-      errors[key] = `${label}必须是 ${min}–${max} 的整数。`
+      errors[key] = `${label}must be${min}–${max}integer.`
     }
   }
   return {

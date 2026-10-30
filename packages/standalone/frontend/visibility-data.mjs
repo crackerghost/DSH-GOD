@@ -8,12 +8,12 @@ export function visibilityCopy(locale) {
     groupHidden: 'Turn off group hiding first',
     saved: 'Model visibility saved',
   } : {
-    hideFree: '隐藏匿名与 Kilo 免费模型',
-    hideEac: '隐藏 EAC 模型',
-    hide: '隐藏模型',
-    show: '显示模型',
-    hidden: '已按偏好隐藏',
-    groupHidden: '请先关闭整组隐藏',
-    saved: '模型显示设置已保存',
+    hideFree: 'Hide Anonymous with Kilo Free Models',
+    hideEac: 'Hide EAC model',
+    hide: 'Hidden model',
+    show: 'display model',
+    hidden: 'Hidden by preference',
+    groupHidden: 'Please turn off the entire group hiding first',
+    saved: 'Model display settings saved',
   }
 }

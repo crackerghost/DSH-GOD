@@ -19,45 +19,45 @@ export const DISCLAIMER_VERSION = 2
 
 /** Channels this build does not offer, named for the reader. */
 export const EXCLUDED_CHANNELS = Object.freeze([
-  'WorkBuddy 国内版（workbuddy，亦称 CodeBuddy）',
-  'WorkBuddy 国际版（workbuddy-ai）',
-  '华为云 Huawei Cloud MaaS（huaweicloud，含 Token Plan）',
+  'WorkBuddy domestic version (workbuddy, also known as CodeBuddy)',
+  'WorkBuddy International Version (workbuddy-ai)',
+  'Huawei Cloud Huawei Cloud MaaS (huaweicloud, including Token Plan)',
 ])
 
 export const DISCLAIMER = Object.freeze({
   version: DISCLAIMER_VERSION,
-  title: '使用须知与免责声明',
-  subtitle: '关于本插件未提供的渠道，以及你需要知道的责任边界',
-  intro: '本插件是一个个人学习与技术研究项目，用于学习模型网关、协议适配与本地路由的实现方式，按「现状」提供，不构成任何商业服务或产品承诺。',
+  title: 'Instructions for use and disclaimer',
+  subtitle: 'About the channels not provided by this plug-in and the boundaries of responsibilities you need to know',
+  intro: 'This plug-in is a personal learning and technical research project, used to learn the implementation of model gateways, protocol adaptation, and local routing. It is provided "as is" and does not constitute any commercial service or product commitment.',
   sections: Object.freeze([
     {
       id: 'excluded',
-      heading: '本插件不提供这三个渠道',
-      body: '本插件不包含、也不提供 WorkBuddy 国内版（workbuddy，亦称 CodeBuddy）、WorkBuddy 国际版（workbuddy-ai）与华为云 Huawei Cloud MaaS（huaweicloud，含 Token Plan）。这三者在插件端与桌面端均被移除：渠道列表、预设、登录入口、插件市场与模型目录里都不会出现，也无法通过导入配置或安装第三方插件启用。目录中看不到它们不是故障，是本项目的明确取舍，后续更新不会重新引入。',
+      heading: 'This plug-in does not provide these three channels',
+      body: 'This plug-in does not include or provide WorkBuddy domestic version (workbuddy, also known as CodeBuddy), WorkBuddy international version (workbuddy-ai), and Huawei Cloud MaaS (huaweicloud, including Token Plan). These three have been removed on both the plug-in and desktop sides: they will not appear in the channel list, presets, login portal, plug-in market, and model directory, and cannot be enabled by importing configurations or installing third-party plug-ins. Not seeing them in the directory is not a glitch, it is a clear trade-off for this project and will not be reintroduced in subsequent updates.',
     },
     {
       id: 'responsibility',
-      heading: '使用第三方渠道与我们无关',
-      body: '你若在本插件之外通过任何方式使用上述渠道或其他第三方服务，包括自行配置地址、导入凭据、安装第三方软件或登录他人账号，均属于你的个人行为，与本项目作者及团队无关。我们不参与、不背书、不提供支持，也不对其可用性、合规性或任何后果承担任何责任。',
+      heading: 'The use of third-party channels has nothing to do with us',
+      body: 'If you use the above channels or other third-party services in any way outside of this plug-in, including configuring your own address, importing credentials, installing third-party software, or logging into other people\'s accounts, it is your personal behavior and has nothing to do with the author and team of this project. We do not participate in, endorse, provide support for, and are not responsible for its availability, compliance, or any consequences.',
     },
     {
       id: 'accounts',
-      heading: '账号与凭据由你自己负责',
-      body: '本插件只在你本机保存你主动导入的凭据，不会上传到任何服务器。请确保你使用这些账号的方式符合对应服务商的条款与所在地法律；由此产生的封禁、扣费、数据风险或其他损失，由使用者自行承担。',
+      heading: 'You are responsible for your account and credentials',
+      body: 'This plug-in only saves the credentials you actively import on your local machine and will not upload them to any server. Please ensure that the way you use these accounts complies with the terms of the corresponding service provider and local laws; any resulting bans, deductions, data risks or other losses will be borne by the user.',
     },
     {
       id: 'no-warranty',
-      heading: '不提供任何担保',
-      body: '本项目不对正确性、稳定性、适销性或特定用途适用性作任何明示或默示担保。使用本插件造成的任何直接或间接损失，作者与团队均不承担责任。请自行评估风险，并优先遵守所在地区的法律法规与服务商协议。',
+      heading: 'No guarantee is provided',
+      body: 'This project does not make any express or implied warranties of correctness, stability, merchantability, or fitness for a particular purpose. The author and team are not responsible for any direct or indirect losses caused by the use of this plug-in. Please evaluate the risks yourself and give priority to complying with the laws, regulations and service provider agreements in your region.',
     },
     {
       id: 'lawful',
-      heading: '请合法合规使用',
-      body: '本项目仅用于个人学习与技术研究。请勿将其用于违反服务商条款、规避授权限制、批量滥用额度或其他违法用途。因使用方式不当引发的争议、索赔或法律责任，均由使用者自行承担。',
+      heading: 'Please use it legally and compliantly',
+      body: 'This project is for personal study and technical research only. Please do not use it to violate service provider terms, circumvent authorization restrictions, batch abuse quotas, or other illegal purposes. Any disputes, claims or legal liabilities arising from improper use shall be borne by the user himself.',
     },
   ]),
-  accept: '我已阅读并了解',
-  reopen: '查看免责声明',
+  accept: 'I have read and understood',
+  reopen: 'View disclaimer',
 })
 
 /** Whether a stored acknowledgement matches the current copy version. */

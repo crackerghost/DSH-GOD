@@ -56,7 +56,7 @@ export function Workspace({ active }: { active: boolean }) {
       .catch(reason => {
         if (!alive) return
         setState('error')
-        setError(reason instanceof Error ? reason.message : '模型工作台启动失败')
+        setError(reason instanceof Error ? reason.message : 'Model workbench failed to start')
       })
     return () => { alive = false }
   }, [active, generation])
@@ -87,24 +87,24 @@ export function Workspace({ active }: { active: boolean }) {
     try {
       await management('/engine/refresh', {})
       frame.current?.contentWindow?.postMessage({ type: 'ofm:engine-action', action: 'refresh' }, window.location.origin)
-    } catch { setError('刷新失败，请重试') }
+    } catch { setError('Refresh failed, please try again') }
   }
 
   const toolbar = (
     <header className="ws-toolbar">
       <div className="ws-title">
-        <h2>模型工作台</h2>
-        <p>在应用内管理渠道、账号与模型；改动会同步进模型清单。</p>
+        <h2>Model workbench</h2>
+        <p>Manage channels, accounts and models within the app; changes will be synchronized into the model list.</p>
       </div>
-      <div className="ws-tools" role="group" aria-label="模型工作台操作">
+      <div className="ws-tools" role="group" aria-label="Model workbench operation">
         <Button variant="ghost" size="icon"
-          title={expanded ? '退出全屏' : '全屏'} aria-label={expanded ? '退出全屏' : '全屏'}
+          title={expanded ? 'Exit full screen' : 'full screen'} aria-label={expanded ? 'Exit full screen' : 'full screen'}
           onClick={() => setExpanded(value => !value)}>
           {expanded ? <Minimize2 size={17} /> : <Maximize2 size={17} />}
         </Button>
         {state === 'ready' && <>
-          <Button variant="ghost" size="icon" title="刷新" aria-label="刷新" onClick={() => void refresh()}><RefreshCw size={17} /></Button>
-          <Button variant="ghost" size="icon" title="工作台设置" aria-label="工作台设置"
+          <Button variant="ghost" size="icon" title="refresh" aria-label="refresh" onClick={() => void refresh()}><RefreshCw size={17} /></Button>
+          <Button variant="ghost" size="icon" title="Workbench setup" aria-label="Workbench setup"
             onClick={() => frame.current?.contentWindow?.postMessage({ type: 'ofm:engine-action', action: 'settings' }, window.location.origin)}>
             <Settings2 size={17} />
           </Button>
@@ -117,13 +117,13 @@ export function Workspace({ active }: { active: boolean }) {
     <div className={`ws-body ${expanded ? 'is-expanded' : ''}`} ref={host}>
       {error && <div className="ws-error" role="alert">{error}</div>}
       {state === 'ready'
-        ? <iframe ref={frame} className="ws-frame" title="模型工作台"
+        ? <iframe ref={frame} className="ws-frame" title="Model workbench"
             src="/api/management/engine/ui/?mode=window&view=providers"
             allow="clipboard-write" referrerPolicy="same-origin"
             onLoad={syncTheme} />
         : <div className="ws-empty" role="status">
-            <span>{state === 'starting' ? '正在启动模型工作台…' : '模型工作台未能启动'}</span>
-            {state === 'error' && <Button onClick={() => { started.current = false; setGeneration(n => n + 1) }}>重试</Button>}
+            <span>{state === 'starting' ? 'Starting model workbench...' : 'Model workbench failed to start'}</span>
+            {state === 'error' && <Button onClick={() => { started.current = false; setGeneration(n => n + 1) }}>Try again</Button>}
           </div>}
     </div>
   )
