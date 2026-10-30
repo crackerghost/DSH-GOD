@@ -11,6 +11,11 @@
   <img alt="dsh kernels" src="https://img.shields.io/badge/dsh-0.1.5--0.1.7--rc.2-2f6f4f?style=flat-square">
   <img alt="status" src="https://img.shields.io/badge/status-beta-f0a441?style=flat-square">
   <br>
+  <a href="https://www.notmybugs.com/">
+    <img src="assets/notmybugs-logo.png" alt="NotMyBugs logo" width="88">
+  </a>
+  <br>
+  <strong>In collaboration with <a href="https://www.notmybugs.com/">NotMyBugs</a></strong>
 
 </div>
 
