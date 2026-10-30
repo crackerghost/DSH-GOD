@@ -180,6 +180,31 @@ del "%DSH_HOME%\profiles\web\pnpm-lock.yaml"
 
 The accompanying `Ignoring broken lockfile` warnings disappear with the rebuild.
 
+## Run the standalone service
+
+The repository also includes a standalone local service that runs without DSH.
+Use Node.js `^22.19.0` or `>=24.0.0`. From the repository root, install the
+dependencies and start the service:
+
+```bash
+npm ci
+npm run start:standalone
+```
+
+On first startup, the service prints a one-time link to its local management
+page. Open that link in a browser to configure the service. The default port is
+`18900`, and data is stored in `~/.our-free-model`. To choose another port and
+data directory:
+
+```bash
+npm run start:standalone -- --port 18900 --data-dir ./ofm-data
+```
+
+The standalone service has its own API key and account data; it does not import
+the plugin's credentials or settings. See
+[`packages/standalone/README.md`](packages/standalone/README.md) for LAN access,
+data migration and API details.
+
 ## Desktop installers (macOS, community build)
 
 The dsh plugin itself needs no build. The **desktop installer** (the Our Free Model desktop shell) is officially published for Windows only; the macOS installer is a community build. The source changes are listed in [PR #421](https://github.com/Ebony-Vinyl/dsh-our-free-model/pull/421) and are fully auditable, line by line. A ready-made Apple Silicon (arm64) build is available from that PR and its community release, or you can build it yourself on a Mac (`npm --prefix packages/desktop run build`; the full pipeline lives in `.github/workflows/build-macos.yml`).
